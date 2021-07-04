@@ -9,7 +9,8 @@ var webpack = require('webpack'),
   { version, description } = require('./package.json');
 const { VueLoaderPlugin } = require('vue-loader');
 const { preprocess } = require('./svelte.config');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin'); 
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const FileManagerPlugin = require('filemanager-webpack-plugin');
 const mode = process.env.NODE_ENV || 'development';
 process.env.NODE_ENV = mode;
 
@@ -44,7 +45,7 @@ var options = {
   output: {
     path: path.join(__dirname, 'build'),
     filename: '[name].bundle.js',
-    publicPath: '/'
+    publicPath: './'
   },
   module: {
     rules: [
@@ -211,6 +212,15 @@ var options = {
       template: path.join(__dirname, 'src', 'empty.html'),
       filename: 'hyperchat/index.html',
       chunks: ['hyperchat']
+    }),
+    new FileManagerPlugin({
+      events: {
+        onEnd: {
+          move: [
+            { source: './build/hyperchat.bundle.js', destination: './build/hyperchat/hyperchat.bundle.js' },
+          ],
+        },
+      },
     }),
   ],
   mode,
