@@ -14,8 +14,14 @@ const FileManagerPlugin = require('filemanager-webpack-plugin');
 const androidPolyfill = require("./src/js/android.js");
 const isAndroid = process.argv.includes('android');
 const mode = isAndroid ? 'production' : (process.env.NODE_ENV || 'development');
-const chromeAPI = isAndroid ? `((${androidPolyfill.toString()})())` : 'window.chrome';
-const manifest = require("./src/manifest.json");
+const manifest = JSON.stringify({
+  description: description,
+  version: version,
+  ...JSON.parse(JSON.stringify(require("./src/manifest.json")))
+});
+const chromeAPI = isAndroid ? (
+  `((${androidPolyfill.toString()})())`.replace(/EXTENSION_MANIFEST/gi, JSON.stringify(manifest))
+) : 'window.chrome';
 process.env.NODE_ENV = mode;
 
 // load the secrets
@@ -63,28 +69,21 @@ var options = {
         }
       },
       {
-        test: /src\/js\/android\.js$/,
-        loader: 'string-replace-loader',
-        options: {
-          search: "EXTENSION_MANIFEST",
-          replace: JSON.stringify(manifest),
-        }
-      },
-      {
-        test: /.*\.js$/,
-        loader: 'string-replace-loader',
-        options: {
-          search: "window.chrome",
-          replace: chromeAPI,
-        }
-      },
-      {
-        test: /.*\.js$/,
-        loader: 'string-replace-loader',
-        options: {
-          search: "window.isAndroid",
-          replace: `${isAndroid}`,
-        }
+        test: /.*/,
+        use: [{
+          loader: 'string-replace-loader',
+          options: {
+            search: "window.chrome",
+            replace: chromeAPI,
+          }
+        }, {
+          loader: 'string-replace-loader',
+          options: {
+            search: "window.isAndroid",
+            replace: `${isAndroid}`,
+          }
+        }],
+        enforce: 'post'
       },
       {
         include: [
@@ -193,11 +192,7 @@ var options = {
           from: 'src/manifest.json',
           transform: function (content, path) {
             // generates the manifest file using the package.json informations
-            return Buffer.from(JSON.stringify({
-              description: description,
-              version: version,
-              ...JSON.parse(content.toString())
-            }));
+            return Buffer.from(manifest);
           }
         },
         {
