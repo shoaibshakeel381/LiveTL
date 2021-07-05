@@ -312,21 +312,18 @@ export function Storage(version) {
     break;
   default:
     // @ts-ignore
-    // eslint-disable-next-line no-undef
-    chrome.storage.onChanged.addListener(updateChangedStores);
+    window.chrome.storage.onChanged.addListener(updateChangedStores);
     this.rawGet = (key) => {
       return new Promise((res) => {
         // @ts-ignore
-        // eslint-disable-next-line no-undef
-        chrome.storage.local.get(key, res);
+        window.chrome.storage.local.get(key, res);
       });
     };
 
     this.rawSet = (obj) => {
       return new Promise((res) => {
         // @ts-ignore
-        // eslint-disable-next-line no-undef
-        chrome.storage.local.set(obj, res);
+        window.chrome.storage.local.set(obj, res);
       });
     };
   }
