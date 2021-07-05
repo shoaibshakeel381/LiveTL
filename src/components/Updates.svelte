@@ -71,5 +71,4 @@
   .left :global(*) {
     text-align: left;
   }
-
 </style>

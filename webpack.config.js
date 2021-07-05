@@ -11,7 +11,11 @@ const { VueLoaderPlugin } = require('vue-loader');
 const { preprocess } = require('./svelte.config');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const FileManagerPlugin = require('filemanager-webpack-plugin');
-const mode = process.env.NODE_ENV || 'development';
+const androidPolyfill = require("./src/js/android.js");
+const isAndroid = process.argv.includes('android');
+const mode = isAndroid ? 'production' : (process.env.NODE_ENV || 'development');
+const chromeAPI = isAndroid ? `((${androidPolyfill.toString()})())` : 'window.chrome';
+const manifest = require("./src/manifest.json");
 process.env.NODE_ENV = mode;
 
 // load the secrets
@@ -54,7 +58,32 @@ var options = {
         loader: 'string-replace-loader',
         options: {
           search: "import { getWAR } from '@/modules/war.js';",
-          replace: 'window.isLiveTL = true; const getWAR = path => window.chrome.runtime.getURL(path);',
+          replace: `window.isLiveTL = true; const getWAR = path => ${chromeAPI
+            }.runtime.getURL(path);`,
+        }
+      },
+      {
+        test: /src\/js\/android\.js$/,
+        loader: 'string-replace-loader',
+        options: {
+          search: "EXTENSION_MANIFEST",
+          replace: JSON.stringify(manifest),
+        }
+      },
+      {
+        test: /.*\.js$/,
+        loader: 'string-replace-loader',
+        options: {
+          search: "window.chrome",
+          replace: chromeAPI,
+        }
+      },
+      {
+        test: /.*\.js$/,
+        loader: 'string-replace-loader',
+        options: {
+          search: "window.isAndroid",
+          replace: `${isAndroid}`,
         }
       },
       {
@@ -181,6 +210,19 @@ var options = {
         }
       ]
     }),
+    new FileManagerPlugin({
+      events: {
+        onEnd: {
+          delete: ['./build/hyperchat/hyperchat.bundle.js'],
+          move: [
+            { 
+              source: './build/hyperchat.bundle.js',
+              destination: './build/hyperchat/hyperchat.bundle.js'
+            },
+          ],
+        },
+      },
+    }),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, 'src', 'empty.html'),
       filename: 'watch.html',
@@ -212,16 +254,7 @@ var options = {
       template: path.join(__dirname, 'src', 'empty.html'),
       filename: 'hyperchat/index.html',
       chunks: ['hyperchat']
-    }),
-    new FileManagerPlugin({
-      events: {
-        onEnd: {
-          move: [
-            { source: './build/hyperchat.bundle.js', destination: './build/hyperchat/hyperchat.bundle.js' },
-          ],
-        },
-      },
-    }),
+    })
   ],
   mode,
   devServer: {

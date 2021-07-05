@@ -2,30 +2,30 @@
 import '../../img/128x128.png';
 import '../../img/48x48.png';
 
-chrome.browserAction.onClicked.addListener(() => {
-  chrome.tabs.create({ url: 'https://livetl.app' });
+window.chrome.browserAction.onClicked.addListener(() => {
+  window.chrome.tabs.create({ url: 'https://livetl.app' });
 });
 
-chrome.runtime.onInstalled.addListener((details) => {
+window.chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason != 'update')
-    chrome.tabs.create({ url: chrome.runtime.getURL('welcome.html') });
+    window.chrome.tabs.create({ url: window.chrome.runtime.getURL('welcome.html') });
 });
 
-chrome.runtime.onMessage.addListener((request, sender, callback) => {
+window.chrome.runtime.onMessage.addListener((request, sender, callback) => {
   switch (request.type) {
   case 'tabid': {
     callback(sender.frameId || sender.tab.id);
     break;
   } case 'message': {
     try {
-      chrome.tabs.query({
+      window.chrome.tabs.query({
         url: [
           'https://www.youtube.com/live_chat*',
           'https://www.youtube.com/live_chat_replay*'
         ]
       }, (tabs) => {
         tabs.forEach(tab => {
-          chrome.tabs.sendMessage(tab.id, request.data);
+          window.chrome.tabs.sendMessage(tab.id, request.data);
         });
       });
     // eslint-disable-next-line no-empty
@@ -51,7 +51,7 @@ const stripHeaders = (headers)=> {
   });
 };
 
-chrome.webRequest.onHeadersReceived.addListener(
+window.chrome.webRequest.onHeadersReceived.addListener(
   details => {
     return {
       responseHeaders: stripHeaders(details.responseHeaders)
