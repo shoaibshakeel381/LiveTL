@@ -1,7 +1,4 @@
 module.exports = () => {
-  window.AndroidNative = window.AndroidNative || {
-    sendMessage: () => {},
-  };
   function getURL(path) {
     return `file://android_asset/${path}`;
   }
@@ -12,21 +9,13 @@ module.exports = () => {
   function sendMessage(data, callback=()=>{}) {
     if (data.type == 'window') callback();
     if (data.type == 'tabid') callback(69); // android only has 1 tab
-    const response = window.AndroidNative.sendMessage(data);
-    if (callback) {
-      callback(response);
-    }
+    window.parent.postMessage(data, '*');
   }
   return {
     runtime: {
       getURL,
       sendMessage,
       getManifest
-    },
-    tabs: {
-      sendMessage: (tabid, data) => { 
-        window.AndroidNative.sendMessage(data);
-      }
     }
   };
 };
