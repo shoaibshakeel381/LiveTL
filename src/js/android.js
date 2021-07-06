@@ -2,7 +2,7 @@ module.exports = () => {
   function getURL(path) {
     return `file://android_asset/${path}`;
   }
-  async function getManifest() {
+  function getManifest() {
     // eslint-disable-next-line no-undef
     return JSON.parse(EXTENSION_MANIFEST);
   }
